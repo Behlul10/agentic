@@ -2,6 +2,32 @@ import os
 import subprocess
 from sys import stdout
 
+
+schema_run_python_file = {
+    "type": "function",
+    "function": {
+        "name": "run_python_file",
+        "description": "Runs specified files at the working directory only, with the option to extend arguments",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Target files path inside the working directory",
+                },
+                "args": {
+                    "type": "array",
+                    "description": "optional list of string arguments to extend the command to run python files. ",
+                    "items": {
+                        "type":"string"
+                    },
+                },
+            },
+        "required": ["file_path"],
+        },
+    },
+}
+
 def run_python_file(
     working_directory: str, file_path: str, args: list[str] | None = None
 ) -> str:

@@ -1,5 +1,24 @@
 import os
 
+schema_get_file_content = {
+    "type": "function",
+    "function": {
+        "name": "get_file_content",
+        "description": "Shows the contents of a file with the limit of max 10000 characters. ",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "file_path": {
+                    "type": "string",
+                    "description": "Target files path inside the working directory",
+                },
+            },
+        },
+        "required": ["file_path"],
+    },
+}
+
+
 def get_file_content(working_directory: str, file_path: str) -> str:
     MAX_CHARS = 10000
 
