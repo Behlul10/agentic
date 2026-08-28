@@ -1,12 +1,11 @@
-from functions.call_functions import (
-    available_functions,
-    call_function,
-)
+from functions.call_functions import call_function
 from prompts import system_prompt
 from dotenv import load_dotenv
+from llm import get_response
 from openai import OpenAI
-import os
 import argparse
+import sys
+import os
 
 def main():
     parser = argparse.ArgumentParser(description="Chatbot")
@@ -29,31 +28,33 @@ def main():
         {"role": "user", "content": args.user_prompt},
     ]
 
-    response = client.chat.completions.create(
-        model="openrouter/free",
-        messages=messages,
-        tools=available_functions,
-        temperature=0,
-    )
+    for i in range(20):
+        response = get_response(client, messages)
+        message = response.choices[0].message
+        messages.append(message)
 
-    if not response.usage:
-        raise RuntimeError("The api request failed.")
+        if not response.usage:
+            raise RuntimeError("The api request failed.")
 
-    message = response.choices[0].message
 
-    for tool_call in message.tool_calls or []:
-        result_message = call_function(tool_call, args.verbose)
-        if not result_message["content"]:
-            raise RuntimeError(f'Content is empty: {result_message["content"]}')
+        for tool_call in message.tool_calls or []:
+            result_message = call_function(tool_call, args.verbose)
+            if not result_message["content"]:
+                raise RuntimeError(f'Content is empty: {result_message["content"]}')
+            if args.verbose:
+                print(f"-> {result_message['content']}")
+            messages.append(result_message)
+
         if args.verbose:
-            print(f"-> {result_message['content']}")
+            print(f'User prompt: {args.user_prompt}')
+            print(f'Prompt tokens: {response.usage.prompt_tokens}')
+            print(f'Response tokens: {response.usage.completion_tokens}')
+        if not message.tool_calls and message.content:
+            print(message.content)
+            return
+    print(f'Error: exceeded maximum loop tries of {i} out of 20')
+    sys.exit("1")
 
-    if args.verbose:
-        print(f'User prompt: {args.user_prompt}')
-        print(f'Prompt tokens: {response.usage.prompt_tokens}')
-        print(f'Response tokens: {response.usage.completion_tokens}')
-    if message.content:
-        print(message.content)
 
 if __name__ == "__main__":
     main()
